@@ -45,7 +45,7 @@ ReportTemplate = """
    </head>
    <body>
       <center>
-         <img src="./logo.png>
+         <img src="./logo.png" alt="TheSweeper Logo">
          <h2>%REPORT_TITLE%</h2>
          <h3>%REPORT_DATE_TIME%</h3>
          <table border="1" cellspacing="2" cellpadding="2">
@@ -65,6 +65,7 @@ ReportTemplate = """
             </tr>
                %TABLE_CONTENT%
          </table>
+         <br><br><br>
       </center>
    </body>
 </html>
@@ -83,7 +84,7 @@ def YaraMatchListToString(YaraMathes):
 def GenerateReport(MatchesList):
     """
       Generates an html report for files that has a match with Yara-Rules
-      :param matches_list: list of dictionaries containing match details for each file. example {"file": file_path, "yara_rules_file": rule_path, "match_list": matches}
+      :param matches_list: list of dictionaries containing match details for each file. example {"file": FilePath, "YaraRulesFile": RulePath, "MatchList": matches}
       :return: list of dictionaries containing match details for each file
       """
     ReportTitle = 'TheSweeper - Scan Report'
