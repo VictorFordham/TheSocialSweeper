@@ -75,7 +75,7 @@ def RunScanner(args):
 
 
     def GenerateArgParser():
-        AsciiLogo = """
+        AsciiLogo = "
     
   _______ _           _____                                  
  |__   __| |         / ____|                                 
@@ -87,7 +87,7 @@ def RunScanner(args):
                                             |_|              
 
     https://github.com/Jistrokz/TheSweeper
-    """
+    "
     ap = argparse.ArgumentParser(AsciiLogo)
 
     ap.add_argument("--update", action='store_true',
