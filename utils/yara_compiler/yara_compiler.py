@@ -7,44 +7,44 @@ import glob
 import yara
 
 
-output_directory = 'output'
-source_directory = 'source'
+OutputDirectory = 'output'
+SourceDirectory = 'source'
 
 
-def recursive_file_scan(root_dir_path, filters):
+def RecursiveFileScan(RootDirPath, filters):
     """scans a directory recursively for files"""
-    file_path_set = set()
+    FilePathSet = set()
 
     for f in filters:
-        for file_path in Path(root_dir_path).glob('**/{}'.format(f)):
-            if os.path.isfile(file_path):
-                file_path_set.add(file_path)
-    return file_path_set
+        for FilePath in Path(RootDirPath).glob('**/{}'.format(f)):
+            if os.path.isfile(FilePath):
+                FilePathSet.add(FilePath)
+    return FilePathSet
 
 
-def get_file_list_in_dir(dir_path, recursive, filters = None):
-    file_path_list = []
+def GetFileListInDir(DirPath, recursive, filters = None):
+    FilePathList = []
 
     if filters is None:
         filters = ['*', '.*']
 
     if not recursive:
         for f in filters:
-            file_path_list.extend(glob.glob(os.path.join(dir_path, f)))
-        return file_path_list
+            FilePathList.extend(glob.glob(os.path.join(DirPath, f)))
+        return FilePathList
     else:
-        return recursive_file_scan(dir_path, filters)
+        return RecursiveFileScan(DirPath, filters)
 
-def compile_yara_rules(yara_rule_path_list, save_directory):
-    for path in yara_rule_path_list:
+def CompileYaraRules(YaraRulePathList, SaveDirectory):
+    for path in YaraRulePathList:
 
         try:
-            save_path = os.path.join(save_directory, os.path.basename(path))
+            SavePath = os.path.join(SaveDirectory, os.path.basename(path))
             compiled = yara.compile(filepath=path, includes=True)
-            compiled.save(save_path)
+            compiled.save(SavePath)
         except Exception as e:
             print("[-] Could not compile the file {}. {}".format(path, e))
 
 
-file_list = get_file_list_in_dir(source_directory, False, ['*.yar'])
-compile_yara_rules(file_list, output_directory)
+FileList = GetFileListInDir(SourceDirectory, False, ['*.yar'])
+CompileYaraRules(FileList, OutputDirectory)

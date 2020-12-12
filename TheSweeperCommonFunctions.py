@@ -40,7 +40,7 @@ def ShouldExclude(path):
             return True
 
     # Check file extension
-    for ext in TheSweeperExclude.excludedFileExtensions:
+    for ext in TheSweeperExclude.ExcludedFileExtensions:
         if path.lower().endswith(ext):
             return True
 
@@ -143,7 +143,7 @@ def CompileYaraRules(YaraRulePathList, SaveDirectory):
                 print("[-] Could not compile the file {}. {}".format(path, e))
 
 
-def compileYaraRulesSrcDir():
+def CompileYaraRulesSrcDir():
 
     dir = os.path.abspath(TheSweeperSettings.YaraRulesSrcDirectory)
     PathList = GetFileSetInDir(dir, True, "*.yar")
@@ -174,7 +174,7 @@ def OpenFile(FilePath):
         return None
 
 
-def CloseFile(Filestream):
+def CloseFile(FileStream):
     try:
         FileStream.close()
         return True
@@ -227,18 +227,18 @@ def tail(FilePath, lines=1, _buffer=4098):
 
 def BuildSmtpConfigDict():
     t = {
-        "host": TheSweeperSettings.smtpHost,
-        "port": TheSweeperSettings.smtpPort,
-        "ssl": TheSweeperSettings.smtpSsl,
-        "username": TheSweeperSettings.smtpUsername,
-        "password": TheSweeperSettings.smtpPassword,
-        "from": TheSweeperSettings.smtpFrom,
-        "recipients": TheSweeperSettings.emailAlertRecipients,
+        "host": TheSweeperSettings.SmtpHost,
+        "port": TheSweeperSettings.SmtpPort,
+        "ssl": TheSweeperSettings.SmtpSsl,
+        "username": TheSweeperSettings.SmtpUsername,
+        "password": TheSweeperSettings.SmtpPassword,
+        "from": TheSweeperSettings.SmtpFrom,
+        "recipients": TheSweeperSettings.EmailAlertRecipients,
     }
     return t
 
 
-def ReportiIncidentByEmail(FilePath, RulesMatched, YaraRulesFileName, EventTime):
+def ReportIncidentByEmail(FilePath, RulesMatched, YaraRulesFileName, EventTime):
     if not TheSweeperSettings.EmailAlertsEnabled:
         return
 
@@ -260,7 +260,7 @@ def ReportiIncidentByEmail(FilePath, RulesMatched, YaraRulesFileName, EventTime)
         TheSweeperLogger.LogError(e, ModuleName)
 
 
-def buildIncidentEmailMessageBody(FileName, FilePath, RulesMatched, YaraRulesFileName, EventTime):
+def BuildIncidentEmailMessageBody(FileName, FilePath, RulesMatched, YaraRulesFileName, EventTime):
     message = TheSweeperSettings.EmailBodyMatchFound
     message += "\n\n"
     message += "Event time: {}".format(EventTime)
