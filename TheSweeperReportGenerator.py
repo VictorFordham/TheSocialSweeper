@@ -4,7 +4,7 @@ projectLocation = "https://github.com/Jistrokz/TheSweeper"
 import os
 import TheSweeperCommonFunctions
 
-report_element = """
+ReportElement = """
     <tr>
         <td align="center">
            <font face="Arial, Helvetica, sans-serif">%INDEX%</font>
@@ -80,7 +80,7 @@ def YaraMatchListToString(YaraMathes):
     text = '[{}]'.format(text)
     return text
 
-def generate_report(MatchesList):
+def GenerateReport(MatchesList):
     """
       Generates an html report for files that has a match with Yara-Rules
       :param matches_list: list of dictionaries containing match details for each file. example {"file": file_path, "yara_rules_file": rule_path, "match_list": matches}
@@ -92,7 +92,7 @@ def generate_report(MatchesList):
     report = ReportTemplate.replace('%REPORT_TITLE%', ReportTitle)
     report = report.replace('%REPORT_DATE_TIME%', ReportDateTime)
 
-    table_content = ""
+    TableContent = ""
 
     index = 1
     for match in MatchesList:
@@ -102,17 +102,17 @@ def generate_report(MatchesList):
         element = ReportElement.replace('%INDEX%', str(index))
         element = element.replace('%FILE_PATH%', match['file'])
 
-        matches_str =  YaraMatchListToString(match['MatchList'])
+        MatchesStr =  YaraMatchListToString(match['MatchList'])
 
-        rule_file_name = ''
+        RuleFileName = ''
         if os.path.isfile(match['YaraRulesFile']):
-            rule_file_Name = os.path.basename(match['YaraRulesFile'])
+            RuleFileName = os.path.basename(match['YaraRulesFile'])
 
 
-        element = element.replace('%MATCHES%', matches_str)
-        element = element.replace('%YARA_RULES_FILE_NAME%', rule_file_name)
-        table_content += element
+        element = element.replace('%MATCHES%', MatchesStr)
+        element = element.replace('%YARA_RULES_FILE_NAME%', RuleFileName)
+        TableContent += element
         index += 1
 
-    report = report.replace('%TABLE_CONTENT%', table_content)
+    report = report.replace('%TABLE_CONTENT%', TableContent)
     return report

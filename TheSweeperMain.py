@@ -11,9 +11,7 @@ import TheSweeperCommonFunctions
 import TheSweeperEmailSender
 from datetime import datetime
 
-arg_parser = None
-
-
+ArgParser = None
 
 def RunScanner(args):
     IsRecursive = args["recursive"]
@@ -28,7 +26,7 @@ def RunScanner(args):
             wwwDirPath = args["wwwPath"].strip()
             MatchResult = TheSweeperScanner.ScanAccessLogs(AccessLogFilePath, wwwDirPath, args["tail"])
         else:
-            arg_parser.print_help()
+            ArgParser.PrintHelp()
             sys.exit(0)
         if MatchResult is None:
             raise Exception()
@@ -37,8 +35,8 @@ def RunScanner(args):
 
     # Generate report
     ReportFileName = 'TheSweeperReport_{}.html'.format(datetime.now().strftime('%Y_%B_%d_%H_%M_%S'))
-    if args['gen_report']:
-        print('[+] Generating report..')
+    if args['GenReport']:
+        print('[+] Generating report...')
 
     if args['GenReport']:
         report = TheSweeperReportGenerator.GenerateReport(MatchResult)
@@ -60,35 +58,34 @@ def RunScanner(args):
         print('[+] Report sent to {}'.format(TheSweeperSettings.EmailAlertRecipients))
 
 
-    def RunTheSweeperUpdater():
-        TheSweeperUpdater.update()
+def RunTheSweeperUpdater():
+    TheSweeperUpdater.update()
 
 
-    def run(args):
-        if args["verbose"]:
-            TheSweeperSettings.VerboseEnabled = True
+def run(args):
+    if args["verbose"]:
+        TheSweeperSettings.VerboseEnabled = True
 
-        if args["update"]:
-            RunTheSweeperUpdater()
-        else:
-            RunScanner(args)
+    if args["update"]:
+        RunTheSweeperUpdater()
+    else:
+        RunScanner(args)
 
 
-    def GenerateArgParser():
-        AsciiLogo = "
-    
-  _______ _           _____                                  
+def GenerateArgparser():
+    ascii_logo = """
+ _______ _           _____                                  
  |__   __| |         / ____|                                 
     | |  | |__   ___| (_____      _____  ___ _ __   ___ _ __ 
     | |  | '_ \ / _ \\___ \ \ /\ / / _ \/ _ \ '_ \ / _ \ '__|
     | |  | | | |  __/____) \ V  V /  __/  __/ |_) |  __/ |   
     |_|  |_| |_|\___|_____/ \_/\_/ \___|\___| .__/ \___|_|   
                                             | |              
-                                            |_|              
+                                            |_|    
 
     https://github.com/Jistrokz/TheSweeper
-    "
-    ap = argparse.ArgumentParser(AsciiLogo)
+    """
+    ap = argparse.ArgumentParser(ascii_logo)
 
     ap.add_argument("--update", action='store_true',
                     help="Fetch latest Yara-Rules and update the current.")
@@ -117,14 +114,14 @@ def RunScanner(args):
     ap.add_argument("-v", "--verbose", action='store_true',
                     help="Show more information while processing.")
 
-    ap.add_argument("--version", action="version", version='TheSweeper Version 1.0')
+    ap.add_argument("--version", action="version", version='Yara-Scanner Version 1.0')
     return ap
 
 
 def main():
-    global arg_parser
-    arg_parser = GenerateArgParser()
-    args = vars(arg_parser.parse_args())
+    global ArgParser
+    ArgParser = GenerateArgparser()
+    args = vars(ArgParser.parse_args())
     run(args)
 
 
