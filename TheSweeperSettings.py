@@ -7,10 +7,10 @@ YaraRulesDirectory = 'yara-rules'
 # Uncompiled rules directory (Src). Yara rules in this diectory will be compiled automatically when start
 YaraRulesSrcDirectory = 'yara-rules-src'
 
-YaraRulesRepoUrl = 'https://github.com/Neo23x0/signature-base'
-YaraRulesRepoDownloadUrl = YaraRulesRepoUrl + '/archive/master.zip'
-YaraRulesZippedName = 'signature-base.zip'
-YaraRulesDirectoryNameInZip = 'signature-base-master/yara'
+YaraRulesRepoUrl = 'https://github.com/Jistrokz/TheSweeper-Rules'
+YaraRulesRepoDownloadUrl = YaraRulesRepoUrl + '/archive/main.zip'
+YaraRulesZippedName = 'TheSweeper-Rules.zip'
+YaraRulesDirectoryNameInZip = 'TheSweeper-Rules-main/yara'
 YaraMatchingTimeout = 30 # timeout in seconds
 MaxFileSize = 6777216 # Max file size 16 MB
 DebugLogEnabled = False
