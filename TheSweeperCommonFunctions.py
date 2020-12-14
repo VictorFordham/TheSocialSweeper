@@ -41,8 +41,8 @@ def ShouldExclude(path):
 
     # Check file extension
     for ext in TheSweeperExclude.ExcludedFileExtensions:
-        if path.lower().endswith(ext):
-            return True
+        # if path.lower().endswith(ext):
+        #     return True
 
     return False
 
