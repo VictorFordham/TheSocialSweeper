@@ -2,7 +2,7 @@ creator = "Kartavya Trivedi"
 projectLocation = "https://github.com/Jistrokz/TheSweeper"
 
 import os
-import TheSweeperCommonFunctions
+from TheSweeper import commonFunctions
 
 ReportElement = """
     <tr>
@@ -71,15 +71,8 @@ ReportTemplate = """
 </html>
 """
 
-def YaraMatchListToString(YaraMathes):
-    text = ''
-    for x in YaraMathes:
-        text += str(x) + ', '
-
-    text = text.rstrip(' ')
-    text = text.rstrip(',')
-    text = '[{}]'.format(text)
-    return text
+def YaraMatchListToString(YaraMatches):
+    return "[{}]".format(", ".join(YaraMatches))
 
 def GenerateReport(MatchesList):
     """
@@ -88,7 +81,7 @@ def GenerateReport(MatchesList):
       :return: list of dictionaries containing match details for each file
       """
     ReportTitle = 'TheSweeper - Scan Report'
-    ReportDateTime = TheSweeperCommonFunctions.GetDatetime()
+    ReportDateTime = commonFunctions.GetDatetime()
 
     report = ReportTemplate.replace('%REPORT_TITLE%', ReportTitle)
     report = report.replace('%REPORT_DATE_TIME%', ReportDateTime)

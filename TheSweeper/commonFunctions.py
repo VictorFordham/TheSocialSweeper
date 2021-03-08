@@ -6,13 +6,10 @@ import glob
 import zipfile
 import urllib.request
 import shutil
-import TheSweeperLogger
 import yara
-import TheSweeperSettings
 from datetime import datetime
-import TheSweeperEmailSender
 import fnmatch
-import TheSweeperExclude
+from TheSweeper import logger, settings, emailSender, exclude
 
 ModuleName = os.path.basename(__file__)
 
@@ -35,14 +32,15 @@ def IsAscii(s):
 
 
 def ShouldExclude(path):
-    for p in TheSweeperExclude.ExcludedPathList:
+    for p in exclude.ExcludedPathList:
         if PathIsParent(p, path):
             return True
 
     # Check file extension
-    for ext in TheSweeperExclude.ExcludedFileExtensions:
+    for ext in exclude.ExcludedFileExtensions:
         # if path.lower().endswith(ext):
         #     return True
+        pass
 
     return False
 
@@ -115,7 +113,7 @@ def DeleteDirectoryContent(DirPath):
             elif os.path.isdir(FilePath): shutil.rmtree(FilePath)
         except Exception as e:
             print('[-] ERROR {}'.format(e))
-            TheSweeperLogger.LogError(e, ModuleName)
+            logger.LogError(e, ModuleName)
 
 
 def download(url, path):
@@ -139,20 +137,20 @@ def CompileYaraRules(YaraRulePathList, SaveDirectory):
             compiled = yara.compile(filepath=path, includes=True)
             compiled.save(SavePath)
         except Exception as e:
-            if TheSweeperSettings.VerboseEnabled:
+            if settings.VerboseEnabled:
                 print("[-] Could not compile the file {}. {}".format(path, e))
 
 
 def CompileYaraRulesSrcDir():
 
-    dir = os.path.abspath(TheSweeperSettings.YaraRulesSrcDirectory)
+    dir = os.path.abspath(settings.YaraRulesSrcDirectory)
     PathList = GetFileSetInDir(dir, True, "*.yar")
 
     if GetFileSetInDir is None or len(PathList) < 1:
         return
 
 
-    CompileYaraRules(PathList, TheSweeperSettings.YaraRulesDirectory)
+    CompileYaraRules(PathList, settings.YaraRulesDirectory)
 
 
 def WriteToFile(FilePath, content):
@@ -160,7 +158,7 @@ def WriteToFile(FilePath, content):
         file.write(content)
 
 def PrintVerbose(msg):
-    if not TheSweeperSettings.VerboseEnabled:
+    if not settings.VerboseEnabled:
         return
     print(msg)
 
@@ -170,7 +168,7 @@ def OpenFile(FilePath):
         return open(FilePath, "r")
     except IOError as e:
         print('[-] ERROR {}'.format(e))
-        TheSweeperLogger.LogError(e, ModuleName)
+        logger.LogError(e, ModuleName)
         return None
 
 
@@ -180,7 +178,7 @@ def CloseFile(FileStream):
         return True
     except IOError as e:
         print('[-] ERROR {}'.format(e))
-        TheSweeperLogger.LogError(e, ModuleName)
+        logger.LogError(e, ModuleName)
         return False
 
 
@@ -190,7 +188,7 @@ def ReadFileLines(FilePath):
 
 
 def GetDatetime():
-    return datetime.now().strftime(TheSweeperSettings.DateTimeFormat)
+    return datetime.now().strftime(settings.DateTimeFormat)
 
 
 def tail(FilePath, lines=1, _buffer=4098):
@@ -227,19 +225,19 @@ def tail(FilePath, lines=1, _buffer=4098):
 
 def BuildSmtpConfigDict():
     t = {
-        "host": TheSweeperSettings.SmtpHost,
-        "port": TheSweeperSettings.SmtpPort,
-        "ssl": TheSweeperSettings.SmtpSsl,
-        "username": TheSweeperSettings.SmtpUsername,
-        "password": TheSweeperSettings.SmtpPassword,
-        "from": TheSweeperSettings.SmtpFrom,
-        "recipients": TheSweeperSettings.EmailAlertRecipients,
+        "host": settings.SmtpHost,
+        "port": settings.SmtpPort,
+        "ssl": settings.SmtpSsl,
+        "username": settings.SmtpUsername,
+        "password": settings.SmtpPassword,
+        "from": settings.SmtpFrom,
+        "recipients": settings.EmailAlertRecipients,
     }
     return t
 
 
 def ReportIncidentByEmail(FilePath, RulesMatched, YaraRulesFileName, EventTime):
-    if not TheSweeperSettings.EmailAlertsEnabled:
+    if not settings.EmailAlertsEnabled:
         return
 
     try:
@@ -252,16 +250,16 @@ def ReportIncidentByEmail(FilePath, RulesMatched, YaraRulesFileName, EventTime):
         SmtpMailerParam['MessageBody'] = BuildIncidentEmailMessageBody(FileName, FilePath, RulesMatched, YaraRulesFileName, EventTime)
         SmtpMailerParam['subject'] = 'Match Found: {}'.format(ShortFileName)
 
-        print('[+] Sending incident info to {}'.format(TheSweeperSettings.EmailAlertRecipients))
-        TheSweeperEmailSender.SendMessage(SmtpMailerParam)
-        print('[+] Incident info sent to {}'.format(TheSweeperSettings.EmailAlertRecipients))
+        print('[+] Sending incident info to {}'.format(settings.EmailAlertRecipients))
+        emailSender.SendMessage(SmtpMailerParam)
+        print('[+] Incident info sent to {}'.format(settings.EmailAlertRecipients))
     except Exception as e:
         print('[-] ERROR: {}'.format(e))
-        TheSweeperLogger.LogError(e, ModuleName)
+        logger.LogError(e, ModuleName)
 
 
 def BuildIncidentEmailMessageBody(FileName, FilePath, RulesMatched, YaraRulesFileName, EventTime):
-    message = TheSweeperSettings.EmailBodyMatchFound
+    message = settings.EmailBodyMatchFound
     message += "\n\n"
     message += "Event time: {}".format(EventTime)
     message += "\n"

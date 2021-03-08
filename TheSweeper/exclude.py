@@ -1,5 +1,5 @@
 import os
-import TheSweeperSettings
+from TheSweeper import settings
 
 ################ Exclude paths from scan ################
 ExcludedPathList = []
@@ -8,7 +8,7 @@ ExcludedPathList = []
 # Example: excluded_path_list.append("C:\\windows\\temp")
 
 # Exclude yara rules directory path by default
-YaraRulesDir = os.path.join(os.getcwd(), TheSweeperSettings.YaraRulesDirectory)
+YaraRulesDir = os.path.join(os.getcwd(), settings.YaraRulesDirectory)
 ExcludedPathList.append(YaraRulesDir)
 
 

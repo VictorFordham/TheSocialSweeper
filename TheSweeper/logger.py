@@ -2,11 +2,8 @@ creator = "Kartavya Trivedi"
 projectLocation = "https://github.com/Jistrokz/TheSweeper"
 
 import logging
-from TheSweeperSettings import DebugLogFilePath
-from TheSweeperSettings import DebugLogEnabled
-from TheSweeperSettings import LogFilePath
-from TheSweeperSettings import DateTimeFormat
-import TheSweeperCommonFunctions
+from TheSweeper import commonFunctions
+from TheSweeper.settings import DebugLogFilePath, DebugLogEnabled, LogFilePath, DateTimeFormat
 
 
 logging.basicConfig(handlers=[logging.FileHandler(filename=DebugLogFilePath, encoding='utf-8', mode='a+')],
@@ -49,7 +46,7 @@ def LogInfo(message, ModuleName):
 def LogIncident(FilePath, RulesMatched, YaraRulesFileName):
     try:
         # Log format: [%time%] "%file_path%" "%rules_matched%" "yara_rules_file_name"
-        LogRow = "[{}] \"{}\" \"{}\" \"{}\"".format(TheSweeperCommonFunctions.GetDatetime(), FilePath, RulesMatched, YaraRulesFileName)
+        LogRow = "[{}] \"{}\" \"{}\" \"{}\"".format(commonFunctions.GetDatetime(), FilePath, RulesMatched, YaraRulesFileName)
 
         with open(LogFilePath, 'a+', encoding='utf8') as f:
             f.write(LogRow)

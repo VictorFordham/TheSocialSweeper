@@ -1,0 +1,3 @@
+import TheSweeper
+
+TheSweeper.main()
