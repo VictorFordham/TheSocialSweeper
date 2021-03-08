@@ -1,6 +1,3 @@
-creator = "Kartavya Trivedi"
-projectLocation = "https://github.com/Jistrokz/TheSweeper"
-
 import logging
 from TheSweeper import commonFunctions
 from TheSweeper.settings import DebugLogFilePath, DebugLogEnabled, LogFilePath, DateTimeFormat

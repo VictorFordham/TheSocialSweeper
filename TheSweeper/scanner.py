@@ -1,7 +1,3 @@
-creator = "Kartavya Trivedi"
-projectLocation = "https://github.com/Jistrokz/TheSweeper"
-
-
 import pathlib
 import os
 import yara

@@ -8,48 +8,33 @@ from datetime import datetime
 from TheSweeper import updater, scanner, settings, reportGenerator, commonFunctions, emailSender
 
 
-ArgParser = None
+def RunScanner(ArgParser):
+    args = ArgParser.parse_args()
 
-def RunScanner(args):
     IsRecursive = args.Recursive
     try:
-            if args.Scan_Dir:
-                match_result = TheSweeperScanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
-            elif args.Scan_File:
-                match_result = TheSweeperScanner.ScanFile(args.Scan_File.strip())
-            elif args.Scan_Access_Logs and args.WWW_Path:
-                access_log_file_path = args.Scan_Access_Logs.strip()
-                www_dir_path = args.WWW_Path.strip()
-                match_result = TheSweeperScanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
-            else:
-                ArgParser.print_help()
-                sys.exit(0)
-            if not match_result:
-                raise Exception()
+        if args.Scan_Dir:
+            match_result = TheSweeperScanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
+        elif args.Scan_File:
+            match_result = TheSweeperScanner.ScanFile(args.Scan_File.strip())
+        elif args.Scan_Access_Logs and args.WWW_Path:
+            access_log_file_path = args.Scan_Access_Logs.strip()
+            www_dir_path = args.WWW_Path.strip()
+            match_result = TheSweeperScanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
+        else:
+            ArgParser.print_help()
+            sys.exit(0)
+        if not match_result:
+            raise Exception()
     except:
         sys.exit(0)
-    # try:
-    #     if args["ScanDir"] is not None:
-    #         MatchResult = TheSweeperScanner.ScanDirectory(args["ScanDir"].strip(), IsRecursive)
-    #     elif args["ScanFile"] is not None:
-    #         MatchResult = TheSweeperScanner.ScanFile(args["ScanFile"].strip())
-    #     elif args["ScanAccessLogs"] is not None and args["wwwPath"] is not None:
-    #         AccessLogFilePath = args["ScanAccessLogs"].strip()
-    #         wwwDirPath = args["wwwPath"].strip()
-    #         MatchResult = TheSweeperScanner.ScanAccessLogs(AccessLogFilePath, wwwDirPath, args["tail"])
-    #     else:
-    #         ArgParser.PrintHelp()
-    #         sys.exit(0)
-    #     if MatchResult is None:
-    #         raise Exception()
-    # except:
-    #     sys.exit(0)
-
+    
     # Generate report
-    ReportFileName = 'TheSweeperReport_{}.html'.format(datetime.now().strftime('%Y_%B_%d_%H_%M_%S'))
+    
     if args.Gen_Report:
         print('[+] Generating report...')
-
+        ReportFileName = 'TheSweeperReport_{}.html'.format(datetime.now().strftime('%Y_%B_%d_%H_%M_%S'))
+        
         report = reportGenerator.GenerateReport(match_result)
         commonFunctions.WriteToFile(ReportFileName, report)
         print('[+] Report saved to "{}"'.format(ReportFileName))
@@ -69,16 +54,13 @@ def RunScanner(args):
             print('[+] Report sent to {}'.format(settings.EmailAlertRecipients))
 
 
-def RunTheSweeperUpdater():
-    updater.update()
-
 
 def run(args):
     if args.Verbose:
         settings.VerboseEnabled = True
 
     if args.Update:
-        RunTheSweeperUpdater()
+        updater.update()
     else:
         RunScanner(args)
 
@@ -130,7 +112,4 @@ def GenerateArgparser():
 
 
 def main():
-    global ArgParser
-    ArgParser = GenerateArgparser()
-    args = ArgParser.parse_args()
-    run(args)
+    run(GenerateArgparser())

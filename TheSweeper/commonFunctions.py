@@ -1,6 +1,3 @@
-creator = "Kartavya Trivedi"
-projectLocation = "https://github.com/Jistrokz/TheSweeper"
-
 import os
 import glob
 import zipfile
