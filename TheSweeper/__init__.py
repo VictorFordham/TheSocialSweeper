@@ -24,7 +24,7 @@ def RunScanner(args):
             else:
                 ArgParser.print_help()
                 sys.exit(0)
-            if match_result is None:
+            if not match_result:
                 raise Exception()
     except:
         sys.exit(0)
