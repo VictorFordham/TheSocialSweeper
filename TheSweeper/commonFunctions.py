@@ -24,10 +24,6 @@ def PathIsParent(ParentPath, ChildPath):
     return os.path.commonpath([ParentPath]) == os.path.commonpath([ParentPath, ChildPath])
 
 
-def IsAscii(s):
-    return all(ord(c) < 128 for c in s)
-
-
 def ShouldExclude(path):
     for p in exclude.ExcludedPathList:
         if PathIsParent(p, path):

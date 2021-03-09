@@ -67,13 +67,13 @@ def run():
         if args.Update:
             updater.update()
         elif args.Scan_Dir:
-            match_result = TheSweeperScanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
+            match_result = scanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
         elif args.Scan_File:
-            match_result = TheSweeperScanner.ScanFile(args.Scan_File.strip())
+            match_result = scanner.ScanFile(args.Scan_File.strip())
         elif args.Scan_Access_Logs and args.WWW_Path:
             access_log_file_path = args.Scan_Access_Logs.strip()
             www_dir_path = args.WWW_Path.strip()
-            match_result = TheSweeperScanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
+            match_result = scanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
         else:
             ArgParser.print_help()
             sys.exit(0)

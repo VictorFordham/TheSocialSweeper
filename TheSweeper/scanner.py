@@ -55,7 +55,7 @@ def match(PathList, YaraRulesPathList):
                 # Attempt to match
 
                 # Check if file path contain non-ascii chars, as it's will cause error in Windows env
-                IsAsciiPath = commonFunctions.IsAscii(FilePath)
+                IsAsciiPath = FilePath.isascii()
                 if not IsAsciiPath and os.name == 'nt':
                     with open(FilePath, 'rb') as f:
                         matches = rules.match(data=f.read(), timeout=settings.YaraMatchingTimeout)
