@@ -1,5 +1,5 @@
 /__pycache__/*
-/TheSweeper/__pycache__/*
+TheSweeper/__pycache__/
 /tmp/*
 /yara-rules/*
 matches.log
