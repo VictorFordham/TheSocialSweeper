@@ -8,63 +8,6 @@ from datetime import datetime
 from TheSweeper import updater, scanner, settings, reportGenerator, commonFunctions, emailSender
 
 
-def RunScanner(ArgParser):
-    args = ArgParser.parse_args()
-
-    IsRecursive = args.Recursive
-    try:
-        if args.Scan_Dir:
-            match_result = TheSweeperScanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
-        elif args.Scan_File:
-            match_result = TheSweeperScanner.ScanFile(args.Scan_File.strip())
-        elif args.Scan_Access_Logs and args.WWW_Path:
-            access_log_file_path = args.Scan_Access_Logs.strip()
-            www_dir_path = args.WWW_Path.strip()
-            match_result = TheSweeperScanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
-        else:
-            ArgParser.print_help()
-            sys.exit(0)
-        if not match_result:
-            raise Exception()
-    except:
-        sys.exit(0)
-    
-    # Generate report
-    
-    if args.Gen_Report:
-        print('[+] Generating report...')
-        ReportFileName = 'TheSweeperReport_{}.html'.format(datetime.now().strftime('%Y_%B_%d_%H_%M_%S'))
-        
-        report = reportGenerator.GenerateReport(match_result)
-        commonFunctions.WriteToFile(ReportFileName, report)
-        print('[+] Report saved to "{}"'.format(ReportFileName))
-
-        # send report by email
-        if len(settings.SmtpHost) > 0 and settings.SmtpPort > 0:
-            report = reportGenerator.GenerateReport(match_result)
-
-            attachment = [{'text': report, 'FileName': ReportFileName}]
-            SmtpMailerParam = commonFunctions.BuildSmtpConfigDict()
-            SmtpMailerParam['MessageBody'] = settings.EmailBodyScanComplete
-            SmtpMailerParam['subject'] = 'Scan Report {}'.format(commonFunctions.GetDatetime())
-            SmtpMailerParam['attachments'] = attachment
-
-            print('[+] Delivering report to {}'.format(settings.EmailAlertRecipients))
-            emailSender.SendMessage(SmtpMailerParam)
-            print('[+] Report sent to {}'.format(settings.EmailAlertRecipients))
-
-
-
-def run(args):
-    if args.Verbose:
-        settings.VerboseEnabled = True
-
-    if args.Update:
-        updater.update()
-    else:
-        RunScanner(args)
-
-
 def GenerateArgparser():
     ascii_logo = """
  _______ _           _____                                  
@@ -111,5 +54,54 @@ def GenerateArgparser():
     return ap
 
 
-def main():
-    run(GenerateArgparser())
+def run():
+    ArgParser = GenerateArgparser()
+
+    args = ArgParser.parse_args()
+
+    IsRecursive = args.Recursive
+    try:
+        if args.Verbose:
+            settings.VerboseEnabled = True
+
+        if args.Update:
+            updater.update()
+        elif args.Scan_Dir:
+            match_result = TheSweeperScanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
+        elif args.Scan_File:
+            match_result = TheSweeperScanner.ScanFile(args.Scan_File.strip())
+        elif args.Scan_Access_Logs and args.WWW_Path:
+            access_log_file_path = args.Scan_Access_Logs.strip()
+            www_dir_path = args.WWW_Path.strip()
+            match_result = TheSweeperScanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
+        else:
+            ArgParser.print_help()
+            sys.exit(0)
+        if not match_result:
+            raise Exception()
+    except:
+        sys.exit(0)
+    
+    # Generate report
+    
+    if args.Gen_Report:
+        print('[+] Generating report...')
+        ReportFileName = 'TheSweeperReport_{}.html'.format(datetime.now().strftime('%Y_%B_%d_%H_%M_%S'))
+        
+        report = reportGenerator.GenerateReport(match_result)
+        commonFunctions.WriteToFile(ReportFileName, report)
+        print('[+] Report saved to "{}"'.format(ReportFileName))
+
+        # send report by email
+        if len(settings.SmtpHost) > 0 and settings.SmtpPort > 0:
+            report = reportGenerator.GenerateReport(match_result)
+
+            attachment = [{'text': report, 'FileName': ReportFileName}]
+            SmtpMailerParam = commonFunctions.BuildSmtpConfigDict()
+            SmtpMailerParam['MessageBody'] = settings.EmailBodyScanComplete
+            SmtpMailerParam['subject'] = 'Scan Report {}'.format(commonFunctions.GetDatetime())
+            SmtpMailerParam['attachments'] = attachment
+
+            print('[+] Delivering report to {}'.format(settings.EmailAlertRecipients))
+            emailSender.SendMessage(SmtpMailerParam)
+            print('[+] Report sent to {}'.format(settings.EmailAlertRecipients))

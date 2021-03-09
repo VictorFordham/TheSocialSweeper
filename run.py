@@ -1,3 +1,3 @@
 import TheSweeper
 
-TheSweeper.main()
+TheSweeper.run()
