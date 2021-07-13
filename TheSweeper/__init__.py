@@ -5,7 +5,7 @@ projectLocation = "https://github.com/Jistrokz/TheSweeper"
 import argparse
 import sys
 from datetime import datetime
-from TheSweeper import updater, scanner, settings, reportGenerator, reportToC2, commonFunctions, emailSender
+from TheSweeper import updater, scanner, settings, reportGenerator, reportToC2, reportToMongo, commonFunctions, emailSender
 
 
 def GenerateArgparser():
@@ -40,6 +40,9 @@ def GenerateArgparser():
 
     ap.add_argument("-r", "--recursive", action='store_true', dest="Recursive",
                     help="Scan sub directories. Optional Used with option '--scan-dir' ")
+    
+    ap.add_argument("--report-to-mongo", action='store', type=str, dest="Report_To_Mongo",
+                    help="Specify a Mongo database URI to add reports to.")
 
     ap.add_argument("--scan-file", action='store', type=str, dest="Scan_File",
                     help="Path to a file to be scanned. Attempt to find a pattern matching with given file.")
@@ -87,6 +90,10 @@ def run():
         print(e)
         sys.exit(0)
     
+    if args.Report_To_Mongo:
+        print('[+] Sending reports to database')
+        reportToMongo.sendReport(args.Report_To_Mongo, match_result)
+
     if args.Gen_Remote_Report:
         print('[+] Sending report to "{}"'.format(args.Gen_Remote_Report))
         reportToC2.sendReport(args.Gen_Remote_Report, match_result)
