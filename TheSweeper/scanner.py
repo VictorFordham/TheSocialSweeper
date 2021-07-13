@@ -63,7 +63,7 @@ def match(PathList, YaraRulesPathList):
                     matches = rules.match(FilePath, timeout=settings.YaraMatchingTimeout)
 
                 if len(matches) > 0:
-                    record = {"file": FilePath, "YaraRulesFile": RulePath, "MatchList": matches}
+                    record = {"file": FilePath, "yaraRulesFile": RulePath, "matchList": matches}
                     MatchList.append(record)
 
                     logger.LogInfo('Found {} matches in "{}" {} "{}"'.format(len(matches), FilePath, matches, RulePath), ModuleName)

@@ -4,3 +4,4 @@ TheSweeper/__pycache__/
 /yara-rules/*
 matches.log
 env/
+debug.log

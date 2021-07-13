@@ -5,7 +5,7 @@ projectLocation = "https://github.com/Jistrokz/TheSweeper"
 import argparse
 import sys
 from datetime import datetime
-from TheSweeper import updater, scanner, settings, reportGenerator, commonFunctions, emailSender
+from TheSweeper import updater, scanner, settings, reportGenerator, reportToC2, commonFunctions, emailSender
 
 
 def GenerateArgparser():
@@ -44,6 +44,9 @@ def GenerateArgparser():
     ap.add_argument("--scan-file", action='store', type=str, dest="Scan_File",
                     help="Path to a file to be scanned. Attempt to find a pattern matching with given file.")
 
+    ap.add_argument("--gen-remote-report", action="store", type=str, dest="Gen_Remote_Report",
+                    help="URL for Sweeper Server to collect report.")
+
     ap.add_argument("--gen-report", action='store_true', dest="Gen_Report",
                     help="Generate an HTML report.")
 
@@ -58,7 +61,7 @@ def run():
     ArgParser = GenerateArgparser()
 
     args = ArgParser.parse_args()
-
+    print(args)
     IsRecursive = args.Recursive
     try:
         if args.Verbose:
@@ -78,9 +81,15 @@ def run():
             ArgParser.print_help()
             sys.exit(0)
         if not match_result:
-            raise Exception()
-    except:
+            # raise Exception() no results shouldn't be an error
+            sys.exit(0)
+    except Exception as e:
+        print(e)
         sys.exit(0)
+    
+    if args.Gen_Remote_Report:
+        print('[+] Sending report to "{}"'.format(args.Gen_Remote_Report))
+        reportToC2.sendReport(args.Gen_Remote_Report, match_result)
     
     # Generate report
     

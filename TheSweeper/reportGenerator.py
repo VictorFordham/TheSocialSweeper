@@ -68,8 +68,6 @@ ReportTemplate = """
 </html>
 """
 
-def YaraMatchListToString(YaraMatches):
-    return "[{}]".format(", ".join(YaraMatches))
 
 def GenerateReport(MatchesList):
     """
@@ -93,11 +91,11 @@ def GenerateReport(MatchesList):
         element = ReportElement.replace('%INDEX%', str(index))
         element = element.replace('%FILE_PATH%', match['file'])
 
-        MatchesStr =  YaraMatchListToString(match['MatchList'])
+        MatchesStr =  str(match['matchList'])
 
         RuleFileName = ''
-        if os.path.isfile(match['YaraRulesFile']):
-            RuleFileName = os.path.basename(match['YaraRulesFile'])
+        if os.path.isfile(match['yaraRulesFile']):
+            RuleFileName = os.path.basename(match['yaraRulesFile'])
 
 
         element = element.replace('%MATCHES%', MatchesStr)

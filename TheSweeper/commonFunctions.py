@@ -18,10 +18,10 @@ def FindFiles(name, path):
             return FullPath
 
 
-def PathIsParent(ParentPath, ChildPath):
-    ParentPath = os.path.abspath(ParentPath)
-    ChildPath = os.path.abspath(ChildPath)
-    return os.path.commonpath([ParentPath]) == os.path.commonpath([ParentPath, ChildPath])
+def PathIsParent(excludePath, filePath):
+    excludePath = os.path.abspath(excludePath) # TODO: ensure that abspath normalizes all file paths
+    filePath = os.path.abspath(filePath)
+    return excludePath == filePath[:len(excludePath)]
 
 
 def ShouldExclude(path):
