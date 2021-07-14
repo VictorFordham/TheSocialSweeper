@@ -84,7 +84,8 @@ def run():
             ArgParser.print_help()
             sys.exit(0)
         if not match_result:
-            # raise Exception() no results shouldn't be an error
+            if args.Report_To_Mongo:
+                reportToMongo.reportAllClear(args.Report_To_Mongo)
             sys.exit(0)
     except Exception as e:
         print(e)

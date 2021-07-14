@@ -1,6 +1,4 @@
-import pathlib
-import os
-import yara
+import os, pathlib, socket, yara
 from TheSweeper import exclude, logger, commonFunctions, settings, accessLogParser
 
 ModuleName = os.path.basename(__file__)
@@ -22,7 +20,7 @@ def match(PathList, YaraRulesPathList):
     """
     # Store matches found
     MatchList = []
-
+    hostname = socket.gethostname()
 
     for FilePath in PathList:
         if type(FilePath) is pathlib.PosixPath:
@@ -33,7 +31,6 @@ def match(PathList, YaraRulesPathList):
 
         if commonFunctions.ShouldExclude(FilePath):
             continue
-
 
         for RulePath in YaraRulesPathList:
             try:
@@ -63,7 +60,7 @@ def match(PathList, YaraRulesPathList):
                     matches = rules.match(FilePath, timeout=settings.YaraMatchingTimeout)
 
                 if len(matches) > 0:
-                    record = {"file": FilePath, "yaraRulesFile": RulePath, "matchList": matches}
+                    record = {"file": FilePath, "host": hostname, "yaraRulesFile": RulePath, "matchList": matches}
                     MatchList.append(record)
 
                     logger.LogInfo('Found {} matches in "{}" {} "{}"'.format(len(matches), FilePath, matches, RulePath), ModuleName)

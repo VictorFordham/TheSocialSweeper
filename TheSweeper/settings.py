@@ -26,6 +26,10 @@ EmailAlertsEnabled = False
 SmtpHost = ""
 SmtpPort = 25
 
+# default Mongo Database
+
+MongoDB = "Sweeper-Test"
+
 # SMTP server require SSL/TLS ?
 SmtpSsl = True
 SmtpUsername = ""
