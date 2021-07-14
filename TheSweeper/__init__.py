@@ -64,7 +64,7 @@ def run():
     ArgParser = GenerateArgparser()
 
     args = ArgParser.parse_args()
-    print(args)
+    
     IsRecursive = args.Recursive
     try:
         if args.Verbose:

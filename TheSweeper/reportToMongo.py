@@ -1,5 +1,5 @@
 import pymongo, socket
-from settings import MongoDB
+from TheSweeper.settings import MongoDB
 
 
 def reportAllClear(uri):

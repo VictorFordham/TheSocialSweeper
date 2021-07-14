@@ -136,7 +136,7 @@ def ScanDirectory(DirectoryPath, recursive = False):
         logger.LogDebug('Getting files path(s) for scan', ModuleName)
         commonFunctions.PrintVerbose('[+] Getting files path(s) for scan..')
         FilePathList = GetFilePathList(DirectoryPath, recursive, '*')
-
+        
         logger.LogDebug('[+] {} File to process'.format(len(FilePathList)), ModuleName)
         print('[+] {} File to process.'.format(len(FilePathList)))
 
