@@ -1,4 +1,4 @@
-import os, pathlib, socket, yara
+import codecs, hashlib, os, pathlib, socket, win32api, yara
 from TheSweeper import exclude, logger, commonFunctions, settings, accessLogParser
 
 ModuleName = os.path.basename(__file__)
@@ -11,7 +11,7 @@ def GetFilePathList(RootDir, recursive, filters):
         return commonFunctions.GetFileSetInDir(RootDir, FilesOnly=True, filters=filters)
 
 
-def match(PathList, YaraRulesPathList):
+def match(PathList, YaraRulesPathList, excludeSet=None):
     """
     Attempt to match file content with yara rules
     :param PathList: list contains path(s) of files to match with yara rules
@@ -21,43 +21,47 @@ def match(PathList, YaraRulesPathList):
     # Store matches found
     MatchList = []
     hostname = socket.gethostname()
+    YaraRules = []
+
+    for RulePath in YaraRulesPathList:
+        logger.LogDebug('Loading rules from {}'.format(RulePath), ModuleName)
+
+        if type(RulePath) is pathlib.PosixPath:
+            RulePath = RulePath.absolute().as_posix()
+
+        try:
+            YaraRules.append(yara.load(RulePath))
+        except yara.Error as e:
+            commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
+            logger.LogError(e, ModuleName)
 
     for FilePath in PathList:
+        if not os.path.isfile(FilePath):
+            continue
+        elif os.path.getsize(FilePath) > settings.MaxFileSize:
+            continue
+        elif commonFunctions.ShouldExclude(FilePath):
+            continue
+
         if type(FilePath) is pathlib.PosixPath:
             FilePath = FilePath.absolute().as_posix()
 
-        if not os.path.isfile(FilePath):
+        file = open(FilePath, 'rb')
+        fileContents = file.read()
+        file.close()
+        fileHash = hashlib.md5(fileContents).digest()
+
+        if excludeSet and (fileHash in excludeSet):
             continue
 
-        if commonFunctions.ShouldExclude(FilePath):
-            continue
-
-        for RulePath in YaraRulesPathList:
+        for rule in YaraRules:
             try:
-                logger.LogDebug('Loading rules from {}'.format(RulePath), ModuleName)
-
-                if type(RulePath) is pathlib.PosixPath:
-                    RulePath = RulePath.absolute().as_posix()
-
-                rules = yara.load(RulePath)
-
-                FileSize = os.path.getsize(FilePath)
-
-                if FileSize > settings.MaxFileSize:
-                    continue
-
                 logger.LogDebug('Attempting to match "{}" with  "{}"'.format(FilePath, RulePath), ModuleName)
                 commonFunctions.PrintVerbose('[+] Attempting to match "{}" with "{}'.format(FilePath, os.path.basename(RulePath)))
 
                 # Attempt to match
 
-                # Check if file path contain non-ascii chars, as it's will cause error in Windows env
-                IsAsciiPath = FilePath.isascii()
-                if not IsAsciiPath and os.name == 'nt':
-                    with open(FilePath, 'rb') as f:
-                        matches = rules.match(data=f.read(), timeout=settings.YaraMatchingTimeout)
-                else:
-                    matches = rules.match(FilePath, timeout=settings.YaraMatchingTimeout)
+                matches = rule.match(data=fileContents, timeout=settings.YaraMatchingTimeout)
 
                 if len(matches) > 0:
                     record = {"file": FilePath, "host": hostname, "yaraRulesFile": RulePath, "matchList": matches}
@@ -115,7 +119,7 @@ def ScanFile(FilePath):
         raise
 
 
-def ScanDirectory(DirectoryPath, recursive = False):
+def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
 
     DirectoryPath = u"{}".format(DirectoryPath)
 
@@ -144,7 +148,7 @@ def ScanDirectory(DirectoryPath, recursive = False):
         commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
         YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
 
-        MatchList = match(FilePathList, YaraRulePathList)
+        MatchList = match(FilePathList, YaraRulePathList, excludeSet=excludeSet)
 
         print('[+] Directory scan complete.')
         logger.LogInfo('Directory scan complete', ModuleName)
@@ -155,6 +159,17 @@ def ScanDirectory(DirectoryPath, recursive = False):
         commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
         logger.LogError(e, ModuleName)
         raise
+
+
+def ScanAllDrives(excludeSet=None):
+    drives_bytes = codecs.escape_decode(win32api.GetLogicalDriveStrings()).split(b'\0')[:-1]
+    drives = [drive.encode("utf-8") for drive in drives_bytes]
+
+    output = []
+    for drive in drives:
+        output += ScanDirectory(drive, recursive=True, excludeSet=excludeSet)
+    
+    return output
 
 
 def CombineFilePathListWithDir(FileList, DirPath):

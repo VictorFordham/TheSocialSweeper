@@ -5,7 +5,7 @@ projectLocation = "https://github.com/Jistrokz/TheSweeper"
 import argparse
 import sys
 from datetime import datetime
-from TheSweeper import updater, scanner, settings, reportGenerator, reportToC2, reportToMongo, commonFunctions, emailSender
+from TheSweeper import knownFileDB, updater, scanner, settings, reportGenerator, reportToC2, reportToMongo, commonFunctions, emailSender
 
 
 def GenerateArgparser():
@@ -23,6 +23,9 @@ def GenerateArgparser():
     """
     ap = argparse.ArgumentParser(ascii_logo)
 
+    ap.add_argument("--ignore-known-files", action='store_true', dest="Ignore_Known_Files",
+                    help="Ignore known good files.")
+
     ap.add_argument("--update", action='store_true', dest="Update",
                     help="Fetch latest Yara-Rules and update the current.")
 
@@ -34,6 +37,9 @@ def GenerateArgparser():
 
     ap.add_argument("--tail", action='store', type=int, default=0, dest="Tail",
                     help="Number of lines to read from access logs file, starting from the end of the file. If not set then will read the entire file")
+
+    ap.add_argument("--scan-all-drives", action="store_true", dest="Scan_All_Drives",
+                    help="Scan all drives connected to the system.")
 
     ap.add_argument("--scan-dir", action='store', type=str, dest="Scan_Dir",
                     help="Path to a directory to be scanned. Scan for file(s) in given directory path and attempt to find a pattern matching with Yara-Ruels.")
@@ -72,8 +78,16 @@ def run():
 
         if args.Update:
             updater.update()
+        if args.Scan_All_Drives:
+            if args.Ignore_Known_Files:
+                scanner.ScanAllDrives(excludeSet=knownFileDB.loadDefaultFileDatabase())
+            else:
+                scanner.ScanAllDrives()
         elif args.Scan_Dir:
-            match_result = scanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
+            if args.Ignore_Known_Files:
+                match_result = scanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive, excludeSet=knownFileDB.loadDefaultFileDatabase())
+            else:
+                match_result = scanner.ScanDirectory(args.Scan_Dir.strip(), IsRecursive)
         elif args.Scan_File:
             match_result = scanner.ScanFile(args.Scan_File.strip())
         elif args.Scan_Access_Logs and args.WWW_Path:

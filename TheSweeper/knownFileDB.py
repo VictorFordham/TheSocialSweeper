@@ -1,9 +1,18 @@
-#from TheSweeper import settings
+import defaultFileDB
 # need to add a variable to settings to be the
 # path to the known hash file
 # this will be a binary file of all known
 # hashes concatenated together
 # since we simply seek identification md5 should suffice
+
+
+def loadFileDatabase(hashes: bytes) -> set:
+    setOfHashes = set()
+
+    for i in range(0, len(hashes), 16):
+        setOfHashes.add(hashes[i:i + 16])
+    
+    return setOfHashes
 
 
 def loadKnownFiles(filePath: str) -> set:
@@ -30,28 +39,5 @@ def storeKnownFiles(filePath: str, setOfHashes: set):
     file.close()
 
 
-if __name__ == "__main__":
-    from hashlib import md5
-    from time import time
-    def genTestSet():
-        setOfHashes = set()
-        for i in range(200_000):
-            r = md5(bytes(i))
-            setOfHashes.add(r.digest())
-    
-        return setOfHashes
-        
-    #s = genTestSet()
-
-    #print(s)
-
-    path = "../test"
-    #start = time()
-    #storeKnownFiles(path, s)
-    #print(time() - start)
-    start = time()
-    o = loadKnownFiles(path)
-    print(time() - start)
-    #print(o)
-    
-    #print(o == s)
+def loadDefaultFileDatabase():
+    return loadFileDatabase(defaultFileDB.database)
