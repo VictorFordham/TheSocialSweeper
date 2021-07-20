@@ -1,4 +1,4 @@
-import defaultFileDB
+from TheSweeper import defaultFileDB
 # need to add a variable to settings to be the
 # path to the known hash file
 # this will be a binary file of all known
