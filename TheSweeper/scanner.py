@@ -1,4 +1,4 @@
-import codecs, hashlib, os, pathlib, socket, win32api, yara
+import codecs, hashlib, os, pathlib, socket, time, win32api, yara
 from TheSweeper import exclude, logger, commonFunctions, settings, accessLogParser
 
 ModuleName = os.path.basename(__file__)
@@ -53,14 +53,13 @@ def match(PathList, YaraRulesPathList, excludeSet=None):
 
         if excludeSet and (fileHash in excludeSet):
             continue
-
-        for rule in YaraRules:
+        
+        for rule, RulePath in zip(YaraRules, YaraRulesPathList):
             try:
                 logger.LogDebug('Attempting to match "{}" with  "{}"'.format(FilePath, RulePath), ModuleName)
                 commonFunctions.PrintVerbose('[+] Attempting to match "{}" with "{}'.format(FilePath, os.path.basename(RulePath)))
 
                 # Attempt to match
-
                 matches = rule.match(data=fileContents, timeout=settings.YaraMatchingTimeout)
 
                 if len(matches) > 0:
@@ -103,14 +102,16 @@ def ScanFile(FilePath):
     try:
         logger.LogInfo('Single file scan started', ModuleName)
         print('[+] Single file scan started')
+        startTime = time.time()
 
         logger.LogDebug('Getting Yara-Rules', ModuleName)
         commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
         YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
 
         MatchList = match([FilePath], YaraRulePathList)
-        print('[+] File scan complete.')
-        logger.LogInfo('File scan complete', ModuleName)
+        endTime = time.time() - startTime
+        print(f'[+] File scan completed in {endTime}s.')
+        logger.LogInfo(f'File scan completed in {endTime}s.', ModuleName)
         return MatchList
 
     except Exception as e:
@@ -135,6 +136,7 @@ def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
     try:
         logger.LogInfo('Directory scan started', ModuleName)
         print('[+] Directory scan started')
+        startTime = time.time()
 
 
         logger.LogDebug('Getting files path(s) for scan', ModuleName)
@@ -150,8 +152,9 @@ def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
 
         MatchList = match(FilePathList, YaraRulePathList, excludeSet=excludeSet)
 
-        print('[+] Directory scan complete.')
-        logger.LogInfo('Directory scan complete', ModuleName)
+        endTime = time.time() - startTime
+        print(f'[+] Directory scan completed in {endTime}s.')
+        logger.LogInfo(f'Directory scan completed in {endTime}s.', ModuleName)
 
         return MatchList
 
@@ -166,9 +169,14 @@ def ScanAllDrives(excludeSet=None):
     drives = [drive.encode("utf-8") for drive in drives_bytes]
 
     output = []
+    print('[+] Directory scan started')
+    startTime = time.time()
     for drive in drives:
         output += ScanDirectory(drive, recursive=True, excludeSet=excludeSet)
-    
+    endTime = time.time() - startTime
+    print(f'[+] Drive scan completed in {endTime}s.')
+    logger.LogInfo(f'Drive scan completed in {endTime}s.', ModuleName)
+
     return output
 
 
@@ -204,6 +212,7 @@ def ScanAccessLogs(AccessLogsFilePath, wwwDirPath, tail=0):
 
         logger.LogInfo('Access logs scan started', ModuleName)
         print('[+] Access logs scan started')
+        startTime = time.time()
 
         logger.LogDebug('Reading access logs file', ModuleName)
         commonFunctions.PrintVerbose('[+] Reading access logs file..')
@@ -228,8 +237,9 @@ def ScanAccessLogs(AccessLogsFilePath, wwwDirPath, tail=0):
         YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
         MatchList = match(FilePathSet, YaraRulePathList)
 
-        print('[+] Access logs scan complete.')
-        logger.LogInfo('Access logs scan complete', ModuleName)
+        endTime = time.time() - startTime
+        print(f'[+] Access logs scan completed in {endTime}s.')
+        logger.LogInfo(f'Access logs scan completed in {endTime}s.', ModuleName)
 
         return MatchList
 
