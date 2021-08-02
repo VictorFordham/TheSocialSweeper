@@ -1,4 +1,6 @@
 import pymongo, socket
+from pymongo.errors import PyMongoError
+from TheSweeper import commonFunctions
 from TheSweeper.settings import MongoDB
 
 
@@ -13,30 +15,35 @@ def reportAllClear(uri):
     db = client[MongoDB]
     collection = db["status"]
 
-    collection.insert_one(data)
-
-    client.close()
+    try:
+        collection.insert_one(data)
+    except PyMongoError as e:
+        commonFunctions.PrintVerbose(f"[-] ERROR: Failed to send report to database, {e}")
+        logger.LogError(e, "reportToMongo")
+        client.close()
 
 
 def sendReport(uri, matches):
-    for match in matches:
-        match["matchList"] = [str(m) for m in match["matchList"]]
-
-    client = pymongo.MongoClient(uri)
-    db = client[MongoDB]
-    collection = db["reports"]
-    collection.insert_many(matches)
-
-    collection = db[socket.gethostname()]
-    collection.insert_many(matches)
-
     data = {
         "host": socket.gethostname(),
         "status": "SCAN_COMPLETE",
         "msg": "Malicious files found."
     }
 
-    collection = db["status"]
-    collection.insert_one(data)
+    for match in matches:
+        match["matchList"] = [str(m) for m in match["matchList"]]
 
-    client.close()
+    client = pymongo.MongoClient(uri)
+    db = client[MongoDB]
+    reports_collection = db["reports"]
+    host_collection = db[socket.gethostname()]
+    status_collection = db["status"]
+
+    try:
+        reports_collection.insert_many(matches)
+        host_collection.insert_many(matches)
+        status_collection.insert_one(data)
+    except PyMongoError as e:
+        commonFunctions.PrintVerbose(f"[-] ERROR: Failed to send report to database, {e}")
+        logger.LogError(e, "reportToMongo")
+        client.close()
