@@ -5,7 +5,7 @@ projectLocation = "https://github.com/Jistrokz/TheSweeper"
 import argparse
 import sys
 from datetime import datetime
-from TheSweeper import knownFileDB, updater, scanner, settings, reportGenerator, reportToC2, reportToMongo, commonFunctions, emailSender
+from TheSweeper import knownFileDB, updater, scanner, settings, reportGenerator, reportToC2, reportToMongo, commonFunctions, emailSender, malarky
 
 
 def GenerateArgparser():
@@ -22,6 +22,8 @@ def GenerateArgparser():
     https://github.com/Jistrokz/TheSweeper
     """
     ap = argparse.ArgumentParser(ascii_logo)
+
+    ap.add_argument("--flash", action='store', type=str, dest="Flash", help="")
 
     ap.add_argument("--ignore-known-files", action='store_true', dest="Ignore_Known_Files",
                     help="Ignore known good files.")
@@ -53,6 +55,15 @@ def GenerateArgparser():
     ap.add_argument("--scan-file", action='store', type=str, dest="Scan_File",
                     help="Path to a file to be scanned. Attempt to find a pattern matching with given file.")
 
+    ap.add_argument("--gen-known-file-db", action='store', type=str, dest="Gen_Known_File_DB",
+                    help="Generate a known file database, from the files under a specified path (recursively scanned); must also specify either --known-file-db-raw-out or --known-file-db-py-out")
+    
+    ap.add_argument("--known-file-db-raw-out", action='store', type=str, dest="Known_File_DB_Raw_Out",
+                    help="Provide a file path to store the generated known file database in the raw format")
+    
+    ap.add_argument("--known-file-db-py-out", action="store", type=str, dest="Known_File_DB_Py_Out",
+                    help="Provide a file path to store the generated known file database in the python format")
+
     ap.add_argument("--gen-remote-report", action="store", type=str, dest="Gen_Remote_Report",
                     help="URL for Sweeper Server to collect report.")
 
@@ -72,13 +83,24 @@ def run():
     args = ArgParser.parse_args()
     
     IsRecursive = args.Recursive
+    match_result = None
     try:
         if args.Verbose:
             settings.VerboseEnabled = True
 
         if args.Update:
             updater.update()
-        if args.Scan_All_Drives:
+        if args.Gen_Known_File_DB:
+            if not args.Known_File_DB_Raw_Out and not args.Known_File_DB_Py_Out:
+                print("Must specify either --known-file-db-raw-out or --known-file-db-py-out when using --gen-known-file-db")
+                sys.exit(0)
+            
+            fileDatabase = knownFileDB.generateDefaultFileDatabase(args.Gen_Known_File_DB)
+            if args.Known_File_DB_Raw_Out:
+                knownFileDB.storeKnownFilesRaw(args.Known_File_DB_Raw_Out, fileDatabase)
+            else:
+                knownFileDB.storeKnownFilesPy(args.Known_File_DB_Py_Out, fileDatabase)
+        elif args.Scan_All_Drives:
             if args.Ignore_Known_Files:
                 scanner.ScanAllDrives(excludeSet=knownFileDB.loadDefaultFileDatabase())
             else:
@@ -97,17 +119,22 @@ def run():
         else:
             ArgParser.print_help()
             sys.exit(0)
+
+        uri = args.Report_To_Mongo
+        if args.Flash:
+            uri = malarky.flash(args.Flash)
+
         if not match_result:
-            if args.Report_To_Mongo:
-                reportToMongo.reportAllClear(args.Report_To_Mongo)
+            if uri:
+                reportToMongo.reportAllClear(uri)
             sys.exit(0)
     except Exception as e:
         print(e)
         sys.exit(0)
     
-    if args.Report_To_Mongo:
+    if uri:
         print('[+] Sending reports to database')
-        reportToMongo.sendReport(args.Report_To_Mongo, match_result)
+        reportToMongo.sendReport(uri, match_result)
 
     if args.Gen_Remote_Report:
         print('[+] Sending report to "{}"'.format(args.Gen_Remote_Report))

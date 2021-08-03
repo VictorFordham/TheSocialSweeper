@@ -1,9 +1,12 @@
-from TheSweeper import defaultFileDB, exclude, logger, commonFunctions, settings, accessLogParser
+import hashlib, os, time
+from TheSweeper import defaultFileDB, logger, commonFunctions, scanner, settings, accessLogParser
 # need to add a variable to settings to be the
 # path to the known hash file
 # this will be a binary file of all known
 # hashes concatenated together
 # since we simply seek identification md5 should suffice
+
+ModuleName = __name__
 
 
 def loadFileDatabase(hashes: bytes) -> set:
@@ -30,7 +33,7 @@ def loadKnownFiles(filePath: str) -> set:
     return setOfHashes
 
 
-def storeKnownFiles(filePath: str, setOfHashes: set):
+def storeKnownFilesRaw(filePath: str, setOfHashes: set):
     file = open(filePath, "wb")
 
     for hash in setOfHashes:
@@ -39,42 +42,50 @@ def storeKnownFiles(filePath: str, setOfHashes: set):
     file.close()
 
 
-def generateDefaultFileDatabase(dirPath: str):
-    DirectoryPath = u"{}".format(DirectoryPath)
+def storeKnownFilesPy(filePath: str, setOfHashes: set):
+    file = open(filePath, "w")
 
-    if DirectoryPath is None or not os.path.isdir(DirectoryPath):
-        msg = "The provided path '{}' is invalid.".format(DirectoryPath)
+    byteString = b"".join(setOfHashes)
+    file.write(f"database = {str(byteString)}")
+
+    file.close()
+
+
+def generateDefaultFileDatabase(dirPath: str, recursive=True) -> set:
+    dirPath = u"{}".format(dirPath)
+
+    if dirPath is None or not os.path.isdir(dirPath):
+        msg = "The provided path '{}' is invalid.".format(dirPath)
         logger.LogError(msg, ModuleName)
         print('[-] ERROR: {}'.format(msg))
         raise Exception(msg)
 
-    # Check if there are any rules in yara-rules-src dir and compile them
-    commonFunctions.CompileYaraRulesSrcDir()
-
     try:
-        logger.LogInfo('Directory scan started', ModuleName)
-        print('[+] Directory scan started')
+        logger.LogInfo('Generating file database', ModuleName)
+        print('[+] Generating file database')
         startTime = time.time()
 
 
-        logger.LogDebug('Getting files path(s) for scan', ModuleName)
-        commonFunctions.PrintVerbose('[+] Getting files path(s) for scan..')
-        FilePathList = GetFilePathList(DirectoryPath, recursive, '*')
+        logger.LogDebug('Getting files path(s)', ModuleName)
+        commonFunctions.PrintVerbose('[+] Getting files path(s)..')
+        FilePathList = scanner.GetFilePathList(dirPath, recursive, '*')
         
         logger.LogDebug('[+] {} File to process'.format(len(FilePathList)), ModuleName)
         print('[+] {} File to process.'.format(len(FilePathList)))
 
-        logger.LogDebug('Getting Yara-Rules', ModuleName)
-        commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
-        YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
+        fileDatabase = set()
+        for filePath in FilePathList:
+            file = open(filePath, "rb")
+            fileContents = file.read()
+            file.close()
 
-        MatchList = match(FilePathList, YaraRulePathList, excludeSet=excludeSet)
+            fileDatabase.add(hashlib.md5(fileContents).digest())
 
         endTime = time.time() - startTime
-        print(f'[+] Directory scan completed in {endTime}s.')
-        logger.LogInfo(f'Directory scan completed in {endTime}s.', ModuleName)
+        print(f'[+] Generating file database completed in {endTime}s.')
+        logger.LogInfo(f'Generating file database completed in {endTime}s.', ModuleName)
 
-        return MatchList
+        return fileDatabase
 
     except Exception as e:
         commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
