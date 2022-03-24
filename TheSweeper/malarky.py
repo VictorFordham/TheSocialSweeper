@@ -1,3 +1,4 @@
+#{Victor's-Malarky}
 from Cryptodome.Cipher import AES
 from base64 import b32decode, b64decode
 from math import log2
