@@ -1,3 +1,4 @@
+#logParser
 import re
 
 rx = re.compile(r'"(?:GET|POST)\s+([^\s?]*)', re.M)
