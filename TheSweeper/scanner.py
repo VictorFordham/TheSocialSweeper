@@ -163,7 +163,7 @@ def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
         logger.LogError(e, ModuleName)
         raise
 
-
+#{Git-the-flag-at-Hub-of-VictorFordham-he-is-the-real-Tester}
 def ScanAllDrives(excludeSet=None):
     drives_bytes = codecs.escape_decode(win32api.GetLogicalDriveStrings()).split(b'\0')[:-1]
     drives = [drive.encode("utf-8") for drive in drives_bytes]
