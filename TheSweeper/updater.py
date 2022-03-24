@@ -5,7 +5,7 @@ from TheSweeper import commonFunctions, logger, settings
 ModuleName = os.path.basename(__file__)
 
 
-# If rules cause undefined identifier error, please include the rule here.
+# If rules cause undefined identifier error, please include the rule here
 ExcludedRulesFileList = [
     'generic_anomalies.yar',
     'general_cloaking.yar',
