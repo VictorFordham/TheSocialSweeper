@@ -1,4 +1,4 @@
-################ Internal TheSweeperSettings, usually remains the same! ################
+################ Internal TheSweeperSettings, usually remains the same! ###############
 TmpDirectory = 'tmp'
 
 # Compiled rules directory
