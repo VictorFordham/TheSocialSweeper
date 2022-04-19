@@ -1,6 +1,7 @@
 import codecs, hashlib, os, pathlib, socket, time, win32api, yara
 from TheSweeper import exclude, logger, commonFunctions, settings, accessLogParser
 
+
 ModuleName = os.path.basename(__file__)
 
 
@@ -11,7 +12,7 @@ def GetFilePathList(RootDir, recursive, filters):
         return commonFunctions.GetFileSetInDir(RootDir, FilesOnly=True, filters=filters)
 
 
-def match(PathList, YaraRulesPathList, excludeSet=None):
+def match(PathList, excludeExt=None, includeExt=None, excludeSet=None):
     """
     Attempt to match file content with yara rules
     :param PathList: list contains path(s) of files to match with yara rules
@@ -22,18 +23,19 @@ def match(PathList, YaraRulesPathList, excludeSet=None):
     MatchList = []
     hostname = socket.gethostname()
     YaraRules = []
+    YaraRule = yara.compile(source=settings.YaraRule)
 
-    for RulePath in YaraRulesPathList:
-        logger.LogDebug('Loading rules from {}'.format(RulePath), ModuleName)
+    # for RulePath in YaraRulesPathList:
+    #     logger.LogDebug('Loading rules from {}'.format(RulePath), ModuleName)
 
-        if type(RulePath) is pathlib.PosixPath:
-            RulePath = RulePath.absolute().as_posix()
+    #     if type(RulePath) is pathlib.PosixPath:
+    #         RulePath = RulePath.absolute().as_posix()
 
-        try:
-            YaraRules.append(yara.load(RulePath))
-        except yara.Error as e:
-            commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
-            logger.LogError(e, ModuleName)
+    #     try:
+    #         YaraRules.append(yara.load(RulePath))
+    #     except yara.Error as e:
+    #         commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
+    #         logger.LogError(e, ModuleName)
 
     for FilePath in PathList:
         if not os.path.isfile(FilePath):
@@ -46,46 +48,87 @@ def match(PathList, YaraRulesPathList, excludeSet=None):
         if type(FilePath) is pathlib.PosixPath:
             FilePath = FilePath.absolute().as_posix()
 
+        ext = FilePath.split(".")[-1]
+
+        if excludeExt and (ext in excludeExt):
+            continue
+
+        if includeExt and (ext not in includeExt):
+            continue
+
         file = open(FilePath, 'rb')
         fileContents = file.read()
+        print(fileContents)
         file.close()
-        fileHash = hashlib.md5(fileContents).digest()
+        # fileHash = hashlib.md5(fileContents).digest()
 
-        if excludeSet and (fileHash in excludeSet):
-            continue
-        
-        for rule, RulePath in zip(YaraRules, YaraRulesPathList):
-            try:
-                logger.LogDebug('Attempting to match "{}" with  "{}"'.format(FilePath, RulePath), ModuleName)
-                commonFunctions.PrintVerbose('[+] Attempting to match "{}" with "{}'.format(FilePath, os.path.basename(RulePath)))
+        # if excludeSet and (fileHash in excludeSet):
+        #     continue
+        print("huh")
+        try:
+            logger.LogDebug('Attempting to match on file "{}"'.format(FilePath), ModuleName)
+            commonFunctions.PrintVerbose('[+] Attempting to match on file "{}"'.format(FilePath))
 
-                # Attempt to match
-                matches = rule.match(data=fileContents, timeout=settings.YaraMatchingTimeout)
+            # Attempt to match
+            matches = YaraRule.match(data=fileContents, timeout=settings.YaraMatchingTimeout)
+            print(matches)
+            print(fileContents)
+            if len(matches) > 0:
+                record = {"file": FilePath, "host": hostname, "matchList": matches}
+                MatchList.append(record)
 
-                if len(matches) > 0:
-                    record = {"file": FilePath, "host": hostname, "yaraRulesFile": RulePath, "matchList": matches}
-                    MatchList.append(record)
+                logger.LogInfo('Found {} matches in "{}" {}'.format(len(matches), FilePath, matches), ModuleName)
+                if settings.VerboseEnabled:
+                    print('[*] Found {} matches: {}'.format(len(matches), matches))
+                else:
+                    print('[*] Found {} matches in "{}" {}'.format(len(matches), FilePath, matches))
+                # logger.LogIncident(FilePath, matches, RulePath)
+                # commonFunctions.ReportIncidentByEmail(FilePath, matches, RulePath, commonFunctions.GetDatetime())
 
-                    logger.LogInfo('Found {} matches in "{}" {} "{}"'.format(len(matches), FilePath, matches, RulePath), ModuleName)
-                    if settings.VerboseEnabled:
-                        print('[*] Found {} matches: {}'.format(len(matches), matches))
-                    else:
-                        print('[*] Found {} matches in "{}" {} :"{}"'.format(len(matches), FilePath, matches,
-                                                                      os.path.basename(RulePath)))
-                    logger.LogIncident(FilePath, matches, RulePath)
-                    commonFunctions.ReportIncidentByEmail(FilePath, matches, RulePath, commonFunctions.GetDatetime())
+        except yara.Error as e:
+            commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
+            logger.LogError(e, ModuleName)
+            if 'could not open file' in str(e):
+                break
 
-            except yara.Error as e:
-                commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
-                logger.LogError(e, ModuleName)
-                if 'could not open file' in str(e):
-                    break
-
-            except Exception as e:
-                commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
-                logger.LogError(e, ModuleName)
+        except Exception as e:
+            commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
+            logger.LogError(e, ModuleName)
 
     return MatchList
+        
+    #     for rule, RulePath in zip(YaraRules, YaraRulesPathList):
+    #         try:
+    #             logger.LogDebug('Attempting to match "{}" with  "{}"'.format(FilePath, RulePath), ModuleName)
+    #             commonFunctions.PrintVerbose('[+] Attempting to match "{}" with "{}'.format(FilePath, os.path.basename(RulePath)))
+
+    #             # Attempt to match
+    #             matches = rule.match(data=fileContents, timeout=settings.YaraMatchingTimeout)
+
+    #             if len(matches) > 0:
+    #                 record = {"file": FilePath, "host": hostname, "yaraRulesFile": RulePath, "matchList": matches}
+    #                 MatchList.append(record)
+
+    #                 logger.LogInfo('Found {} matches in "{}" {} "{}"'.format(len(matches), FilePath, matches, RulePath), ModuleName)
+    #                 if settings.VerboseEnabled:
+    #                     print('[*] Found {} matches: {}'.format(len(matches), matches))
+    #                 else:
+    #                     print('[*] Found {} matches in "{}" {} :"{}"'.format(len(matches), FilePath, matches,
+    #                                                                   os.path.basename(RulePath)))
+    #                 logger.LogIncident(FilePath, matches, RulePath)
+    #                 commonFunctions.ReportIncidentByEmail(FilePath, matches, RulePath, commonFunctions.GetDatetime())
+
+    #         except yara.Error as e:
+    #             commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
+    #             logger.LogError(e, ModuleName)
+    #             if 'could not open file' in str(e):
+    #                 break
+
+    #         except Exception as e:
+    #             commonFunctions.PrintVerbose('[-] ERROR: {}'.format(e))
+    #             logger.LogError(e, ModuleName)
+
+    # return MatchList
 
 
 def ScanFile(FilePath):
@@ -104,11 +147,11 @@ def ScanFile(FilePath):
         print('[+] Single file scan started')
         startTime = time.time()
 
-        logger.LogDebug('Getting Yara-Rules', ModuleName)
-        commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
-        YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
+        # logger.LogDebug('Getting Yara-Rules', ModuleName)
+        # commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
+        # YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
 
-        MatchList = match([FilePath], YaraRulePathList)
+        MatchList = match([FilePath])
         endTime = time.time() - startTime
         print(f'[+] File scan completed in {endTime}s.')
         logger.LogInfo(f'File scan completed in {endTime}s.', ModuleName)
@@ -120,7 +163,7 @@ def ScanFile(FilePath):
         raise
 
 
-def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
+def ScanDirectory(DirectoryPath, recursive = False, excludeExt=None, includeExt=None, excludeSet=None):
 
     DirectoryPath = u"{}".format(DirectoryPath)
 
@@ -146,11 +189,11 @@ def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
         logger.LogDebug('[+] {} File to process'.format(len(FilePathList)), ModuleName)
         print('[+] {} File to process.'.format(len(FilePathList)))
 
-        logger.LogDebug('Getting Yara-Rules', ModuleName)
-        commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
-        YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
+        # logger.LogDebug('Getting Yara-Rules', ModuleName)
+        # commonFunctions.PrintVerbose('[+] Getting Yara-Rules..')
+        # YaraRulePathList = GetFilePathList(settings.YaraRulesDirectory, True, '*.yar')
 
-        MatchList = match(FilePathList, YaraRulePathList, excludeSet=excludeSet)
+        MatchList = match(FilePathList, excludeExt=excludeExt, includeExt=includeExt, excludeSet=excludeSet)
 
         endTime = time.time() - startTime
         print(f'[+] Directory scan completed in {endTime}s.')
@@ -164,7 +207,7 @@ def ScanDirectory(DirectoryPath, recursive = False, excludeSet=None):
         raise
 
 #{Git-the-flag-at-Hub-of-VictorFordham-he-is-the-real-Tester}
-def ScanAllDrives(excludeSet=None):
+def ScanAllDrives(excludeExt=None, includeExt=None, excludeSet=None):
     drives_bytes = codecs.escape_decode(win32api.GetLogicalDriveStrings()).split(b'\0')[:-1]
     drives = [drive.encode("utf-8") for drive in drives_bytes]
 
@@ -172,7 +215,7 @@ def ScanAllDrives(excludeSet=None):
     print('[+] Directory scan started')
     startTime = time.time()
     for drive in drives:
-        output += ScanDirectory(drive, recursive=True, excludeSet=excludeSet)
+        output += ScanDirectory(drive, recursive=True, excludeExt=excludeExt, includeExt=includeExt, excludeSet=excludeSet)
     endTime = time.time() - startTime
     print(f'[+] Drive scan completed in {endTime}s.')
     logger.LogInfo(f'Drive scan completed in {endTime}s.', ModuleName)

@@ -7,6 +7,17 @@ YaraRulesDirectory = 'yara-rules'
 # Uncompiled rules directory (Src). Yara rules in this diectory will be compiled automatically when start
 YaraRulesSrcDirectory = 'yara-rules-src'
 
+YaraRule = """
+rule SSN
+{
+    strings:
+        $ssn = /(\d{3}-\d{2}-\d{4})|(\d{3}\d{2}\d{4})$/ wide ascii
+    
+    condition:
+        #ssn
+}
+"""
+
 YaraRulesRepoUrl = 'https://github.com/Jistrokz/TheSweeper-Rules'
 YaraRulesRepoDownloadUrl = YaraRulesRepoUrl + '/archive/main.zip'
 YaraRulesZippedName = 'TheSweeper-Rules.zip'

@@ -1,6 +1,6 @@
 import pymongo, socket
 from pymongo.errors import PyMongoError
-from TheSweeper import commonFunctions
+from TheSweeper import commonFunctions, logger
 from TheSweeper.settings import MongoDB
 #comment
 
@@ -8,7 +8,7 @@ def reportAllClear(uri):
     data = {
         "host": socket.gethostname(),
         "status": "SCAN_COMPLETE",
-        "msg": "No malicious files found."
+        "msg": "Scan Complete, no PII found"
     }
 
     client = pymongo.MongoClient(uri)
@@ -27,7 +27,7 @@ def sendReport(uri, matches):
     data = {
         "host": socket.gethostname(),
         "status": "SCAN_COMPLETE",
-        "msg": "Malicious files found."
+        "msg": "PII Found"
     }
 
     for match in matches:
