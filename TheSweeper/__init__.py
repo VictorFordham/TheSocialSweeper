@@ -160,7 +160,7 @@ def run(arguments=None):
                 executionLoop(args)
 
             match_result = performScan(args)
-            print(match_result)
+            
             # maybe gen reports afterward
         else:
             ArgParser.print_help()

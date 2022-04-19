@@ -58,13 +58,13 @@ def match(PathList, excludeExt=None, includeExt=None, excludeSet=None):
 
         file = open(FilePath, 'rb')
         fileContents = file.read()
-        print(fileContents)
+        
         file.close()
         # fileHash = hashlib.md5(fileContents).digest()
 
         # if excludeSet and (fileHash in excludeSet):
         #     continue
-        print("huh")
+        
         try:
             logger.LogDebug('Attempting to match on file "{}"'.format(FilePath), ModuleName)
             commonFunctions.PrintVerbose('[+] Attempting to match on file "{}"'.format(FilePath))
