@@ -71,11 +71,11 @@ def GenerateArgparser():
     ap.add_argument("--known-file-db-py-out", action="store", type=str, dest="Known_File_DB_Py_Out",
                     help="Provide a file path to store the generated known file database in the python format")
 
-    ap.add_argument("--gen-remote-report", action="store", type=str, dest="Gen_Remote_Report",
-                    help="URL for Sweeper Server to collect report.")
+    # ap.add_argument("--gen-remote-report", action="store", type=str, dest="Gen_Remote_Report",
+    #                 help="URL for Sweeper Server to collect report.")
 
-    ap.add_argument("--gen-report", action='store_true', dest="Gen_Report",
-                    help="Generate an HTML report.")
+    # ap.add_argument("--gen-report", action='store_true', dest="Gen_Report",
+    #                 help="Generate an HTML report.")
 
     ap.add_argument("-v", "--verbose", action='store_true', dest="Verbose",
                     help="Show more information while processing.")
@@ -94,14 +94,14 @@ def performScan(args):
         www_dir_path = args.WWW_Path.strip()
         match_result = scanner.ScanAccessLogs(access_log_file_path, www_dir_path, args.Tail)
     else:
-        excludeExt = set(ext for ext in args.Ignore_File_Extension.split(',')) if args.Ignore_File_Extension else None
-        includeExt = set(ext for ext in args.Include_File_Extension.split(',')) if args.Include_File_Extension else None
+        excludeExt = set(ext for ext in args.Ignore_File_Extensions.split(',')) if args.Ignore_File_Extensions else None
+        includeExt = set(ext for ext in args.Include_File_Extensions.split(',')) if args.Include_File_Extensions else None
         excludeSet = knownFileDB.loadDefaultFileDatabase() if args.Ignore_Known_Files else None
 
         if args.Scan_All_Drives:
             match_result = scanner.ScanAllDrives(excludeExt=excludeExt, includeExt=includeExt, excludeSet=excludeSet)
         elif args.Scan_Dir:
-            match_result = scanner.ScanDirectory(args.Scan_Dir.strip(), args.Recursive, eexcludeExt=excludeExt, includeExt=includeExt, excludeSet=excludeSet)
+            match_result = scanner.ScanDirectory(args.Scan_Dir.strip(), args.Recursive, excludeExt=excludeExt, includeExt=includeExt, excludeSet=excludeSet)
     
     return match_result
 

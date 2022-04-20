@@ -1,4 +1,4 @@
-import codecs, hashlib, os, pathlib, socket, time, win32api, yara
+import codecs, hashlib, os, pathlib, socket, time, win32api, yara, requests
 from TheSweeper import exclude, logger, commonFunctions, settings, accessLogParser
 
 
@@ -22,8 +22,13 @@ def match(PathList, excludeExt=None, includeExt=None, excludeSet=None):
     # Store matches found
     MatchList = []
     hostname = socket.gethostname()
-    YaraRules = []
-    YaraRule = yara.compile(source=settings.YaraRule)
+
+    YaraRuleSrc = settings.YaraRule
+    res = requests.get("https://sweeper.stninc.com/config.yar")
+    if res.status_code == 200:
+        YaraRuleSrc = res.text
+
+    YaraRule = yara.compile(source=YaraRuleSrc)
 
     # for RulePath in YaraRulesPathList:
     #     logger.LogDebug('Loading rules from {}'.format(RulePath), ModuleName)
@@ -58,12 +63,11 @@ def match(PathList, excludeExt=None, includeExt=None, excludeSet=None):
 
         file = open(FilePath, 'rb')
         fileContents = file.read()
-        
         file.close()
-        # fileHash = hashlib.md5(fileContents).digest()
 
-        # if excludeSet and (fileHash in excludeSet):
-        #     continue
+        if excludeSet:
+            fileHash = hashlib.md5(fileContents).digest()
+            if fileHash in excludeSet: continue
         
         try:
             logger.LogDebug('Attempting to match on file "{}"'.format(FilePath), ModuleName)
